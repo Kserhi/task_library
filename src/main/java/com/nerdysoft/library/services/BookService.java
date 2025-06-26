@@ -1,74 +1,64 @@
 package com.nerdysoft.library.services;
 
-import com.nerdysoft.library.dto.BorrowedBookCount;
 import com.nerdysoft.library.entities.Book;
+import com.nerdysoft.library.dto.BorrowedBookCount;
 import com.nerdysoft.library.repositories.BookRepository;
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.util.Optional;
 
-
-
-@RequiredArgsConstructor
 @Service
+@RequiredArgsConstructor
 public class BookService {
-    private final BookRepository bookRepository;
+    private final BookRepository bookRepo;
 
     @Transactional
     public Book addBook(Book book) {
-        Optional<Book> existing = bookRepository.findByTitleAndAuthor(book.getTitle(), book.getAuthor());
+        Optional<Book> existing = bookRepo.findByTitleAndAuthor(book.getTitle(), book.getAuthor());
         if (existing.isPresent()) {
-            Book exBook = existing.get();
-            exBook.setAmount(exBook.getAmount() + 1);
-            return bookRepository.save(exBook);
+            Book ex = existing.get();
+            ex.setAmount(ex.getAmount() + 1);
+            return bookRepo.save(ex);
         }
-        return bookRepository.save(book);
+        return bookRepo.save(book);
     }
 
     public List<Book> getAllBooks() {
-        return bookRepository.findAll();
+        return bookRepo.findAll();
     }
 
     public Book getBookById(Long id) {
-        return bookRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Книгу з ID " + id + " не знайдено"));
+        return bookRepo.findById(id).orElseThrow(() -> new RuntimeException("Книга не знайдена"));
     }
 
     @Transactional
-    public Book updateBook(Long id, Book updatedBook) {
-        Book existing = bookRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Книгу з ID " + id + " не знайдено"));
-
-        existing.setTitle(updatedBook.getTitle());
-        existing.setAuthor(updatedBook.getAuthor());
-        existing.setAmount(updatedBook.getAmount());
-
-        return bookRepository.save(existing);
+    public Book updateBook(Long id, Book updated) {
+        Book ex = bookRepo.findById(id).orElseThrow(() -> new RuntimeException("Книга не знайдена"));
+        ex.setTitle(updated.getTitle());
+        ex.setAuthor(updated.getAuthor());
+        ex.setAmount(updated.getAmount());
+        return bookRepo.save(ex);
     }
 
     public void deleteBook(Long id) {
-        Book book = bookRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Книга не знайдена"));
-
-        if (!book.getBorrowers().isEmpty()) {
-            throw new IllegalStateException("Неможливо видалити книгу: вона позичена хоча б одним учасником");
+        Book ex = bookRepo.findById(id).orElseThrow(() -> new RuntimeException("Книга не знайдена"));
+        if (!ex.getBorrowers().isEmpty()) {
+            throw new IllegalStateException("Неможливо видалити книгу: вона позичена");
         }
-
-        bookRepository.delete(book);
+        bookRepo.delete(ex);
     }
 
     public List<Book> getBooksBorrowedByMemberName(String name) {
-        return bookRepository.findByBorrowers_Name(name);
+        return bookRepo.findByBorrowers_Name(name);
     }
 
     public List<String> getDistinctBorrowedBookTitles() {
-        return bookRepository.findUniqueBorrowedTitles();
+        return bookRepo.findUniqueBorrowedTitles();
     }
 
     public List<BorrowedBookCount> getBorrowedBookCounts() {
-        return bookRepository.findBorrowedBookCounts();
+        return bookRepo.findBorrowedBookCounts();
     }
-
 }

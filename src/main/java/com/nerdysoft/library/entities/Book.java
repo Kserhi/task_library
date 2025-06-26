@@ -5,12 +5,15 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
-
+import lombok.NoArgsConstructor;
+import lombok.AllArgsConstructor;
 import java.util.HashSet;
 import java.util.Set;
 
-@Data
 @Entity
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
 public class Book {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -28,8 +31,6 @@ public class Book {
     @Column(nullable = false)
     private int amount;
 
-    // Зв'язок з учасниками, які позичили цю книгу
     @ManyToMany(mappedBy = "borrowedBooks")
     private Set<Member> borrowers = new HashSet<>();
-
 }

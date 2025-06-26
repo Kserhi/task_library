@@ -1,8 +1,10 @@
 package com.nerdysoft.library.dto;
 
-import lombok.Data;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
 
-@Data
+@Getter
+@AllArgsConstructor
 public class BorrowedBookCount {
     private String title;
     private Long count;

@@ -1,27 +1,23 @@
 package com.nerdysoft.library.services;
 
-import com.nerdysoft.library.entities.Book;
 import com.nerdysoft.library.entities.Member;
-import com.nerdysoft.library.repositories.BookRepository;
+import com.nerdysoft.library.entities.Book;
 import com.nerdysoft.library.repositories.MemberRepository;
-import jakarta.transaction.Transactional;
+import com.nerdysoft.library.repositories.BookRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 
-
-
-@RequiredArgsConstructor
 @Service
+@RequiredArgsConstructor
 public class MemberService {
-
     private final MemberRepository memberRepo;
     private final BookRepository bookRepo;
 
     @Value("${library.borrow.limit}")
     private int borrowLimit;
-
 
     public Member createMember(Member member) {
         return memberRepo.save(member);
@@ -32,72 +28,54 @@ public class MemberService {
     }
 
     public Member getMemberById(Long id) {
-        return memberRepo.findById(id)
-                .orElseThrow(() -> new RuntimeException("Учасника з ID " + id + " не знайдено"));
+        return memberRepo.findById(id).orElseThrow(() -> new RuntimeException("Учасник не знайдений"));
     }
 
-    public Member updateMember(Long id, Member updatedMember) {
-        Member existing = memberRepo.findById(id)
-                .orElseThrow(() -> new RuntimeException("Учасника з ID " + id + " не знайдено"));
-
-        existing.setName(updatedMember.getName());
-        return memberRepo.save(existing);
+    public Member updateMember(Long id, Member upd) {
+        Member ex = memberRepo.findById(id).orElseThrow(() -> new RuntimeException("Учасник не знайдений"));
+        ex.setName(upd.getName());
+        return memberRepo.save(ex);
     }
 
     public void deleteMember(Long id) {
-        Member member = memberRepo.findById(id)
-                .orElseThrow(() -> new RuntimeException("Учасник не знайдений"));
-
-        if (!member.getBorrowedBooks().isEmpty()) {
+        Member ex = memberRepo.findById(id).orElseThrow(() -> new RuntimeException("Учасник не знайдений"));
+        if (!ex.getBorrowedBooks().isEmpty()) {
             throw new IllegalStateException("Неможливо видалити учасника: є нездані книги");
         }
-
-        memberRepo.delete(member);
+        memberRepo.delete(ex);
     }
 
     @Transactional
     public void borrowBook(Long memberId, Long bookId) {
-        Member member = memberRepo.findById(memberId)
-                .orElseThrow(() -> new RuntimeException("Учасник не знайдений"));
-        Book book = bookRepo.findById(bookId)
-                .orElseThrow(() -> new RuntimeException("Книга не знайдена"));
-
-        if (member.getBorrowedBooks().size() >= borrowLimit) {
-            throw new IllegalStateException("Перевищено ліміт позичених книг");
+        Member m = memberRepo.findById(memberId).orElseThrow(() -> new RuntimeException("Учасник не знайдений"));
+        Book b = bookRepo.findById(bookId).orElseThrow(() -> new RuntimeException("Книга не знайдена"));
+        if (m.getBorrowedBooks().size() >= borrowLimit) {
+            throw new IllegalStateException("Перевищено ліміт");
         }
-
-        if (book.getAmount() <= 0) {
+        if (b.getAmount() <= 0) {
             throw new IllegalStateException("Книга недоступна");
         }
-
-        if (member.getBorrowedBooks().contains(book)) {
-            throw new IllegalStateException("Учасник вже позичив цю книгу");
+        if (m.getBorrowedBooks().contains(b)) {
+            throw new IllegalStateException("Вже позичена");
         }
-
-        book.setAmount(book.getAmount() - 1);
-        member.getBorrowedBooks().add(book);
-        book.getBorrowers().add(member);
-
-        memberRepo.save(member);
-        bookRepo.save(book);
+        b.setAmount(b.getAmount() - 1);
+        m.getBorrowedBooks().add(b);
+        b.getBorrowers().add(m);
+        memberRepo.save(m);
+        bookRepo.save(b);
     }
 
     @Transactional
     public void returnBook(Long memberId, Long bookId) {
-        Member member = memberRepo.findById(memberId)
-                .orElseThrow(() -> new RuntimeException("Учасник не знайдений"));
-        Book book = bookRepo.findById(bookId)
-                .orElseThrow(() -> new RuntimeException("Книга не знайдена"));
-
-        if (!member.getBorrowedBooks().contains(book)) {
-            throw new IllegalStateException("Ця книга не була позичена цим учасником");
+        Member m = memberRepo.findById(memberId).orElseThrow(() -> new RuntimeException("Учасник не знайдений"));
+        Book b = bookRepo.findById(bookId).orElseThrow(() -> new RuntimeException("Книга не знайдена"));
+        if (!m.getBorrowedBooks().contains(b)) {
+            throw new IllegalStateException("Не позичав");
         }
-
-        member.getBorrowedBooks().remove(book);
-        book.getBorrowers().remove(member);
-        book.setAmount(book.getAmount() + 1);
-
-        memberRepo.save(member);
-        bookRepo.save(book);
+        m.getBorrowedBooks().remove(b);
+        b.getBorrowers().remove(m);
+        b.setAmount(b.getAmount() + 1);
+        memberRepo.save(m);
+        bookRepo.save(b);
     }
 }
