@@ -4,22 +4,17 @@ import com.nerdysoft.library.dto.BorrowedBookCount;
 import com.nerdysoft.library.entities.Book;
 import com.nerdysoft.library.repositories.BookRepository;
 import jakarta.transaction.Transactional;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-
 import java.util.List;
 import java.util.Optional;
 
+
+
+@RequiredArgsConstructor
 @Service
 public class BookService {
     private final BookRepository bookRepository;
-
-
-    @Autowired
-    public BookService(BookRepository bookRepository) {
-        this.bookRepository = bookRepository;
-    }
-
 
     @Transactional
     public Book addBook(Book book) {

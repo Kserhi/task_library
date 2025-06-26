@@ -5,12 +5,14 @@ import com.nerdysoft.library.entities.Member;
 import com.nerdysoft.library.repositories.BookRepository;
 import com.nerdysoft.library.repositories.MemberRepository;
 import jakarta.transaction.Transactional;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-
 import java.util.List;
 
+
+
+@RequiredArgsConstructor
 @Service
 public class MemberService {
 
@@ -20,11 +22,6 @@ public class MemberService {
     @Value("${library.borrow.limit}")
     private int borrowLimit;
 
-    @Autowired
-    public MemberService(MemberRepository memberRepo, BookRepository bookRepo) {
-        this.memberRepo = memberRepo;
-        this.bookRepo = bookRepo;
-    }
 
     public Member createMember(Member member) {
         return memberRepo.save(member);
